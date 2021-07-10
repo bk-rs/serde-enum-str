@@ -5,35 +5,14 @@ use quote::quote;
 use syn::parse_macro_input;
 
 mod input;
+mod output_de;
+mod output_ser;
 
 #[proc_macro_derive(Serialize_enum_str, attributes(serde))]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {
-    let _input = parse_macro_input!(input as self::input::Input);
+    let input = parse_macro_input!(input as self::input::Input);
 
-    TokenStream::from(quote! {
-        #[derive(serde::Serialize)]
-        #[serde(rename_all = "snake_case")]
-        enum __FooSer {
-            A,
-            #[serde(rename = "B")]
-            B,
-        }
-
-        impl serde::Serialize for Foo {
-            fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
-            where
-                S: serde::Serializer,
-            {
-                let value = match *self {
-                    Self::A => __FooSer::A,
-                    Self::B => __FooSer::B,
-                    Self::Other(ref s) => return serde::Serialize::serialize(s, serializer),
-                };
-
-                serde::Serialize::serialize(&value, serializer)
-            }
-        }
-    })
+    TokenStream::from(quote!(#input))
 }
 
 #[proc_macro_derive(Deserialize_enum_str, attributes(serde))]
