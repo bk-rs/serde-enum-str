@@ -2,14 +2,22 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::parse_macro_input;
+
+mod parse;
+
+use self::parse::Input;
 
 #[proc_macro_derive(Serialize_enum_str, attributes(serde))]
-pub fn derive_serialize(_input: TokenStream) -> TokenStream {
+pub fn derive_serialize(input: TokenStream) -> TokenStream {
+    let _input = parse_macro_input!(input as Input);
+
     TokenStream::from(quote! {
         #[derive(serde::Serialize)]
         #[serde(rename_all = "snake_case")]
         enum __FooSer {
             A,
+            #[serde(rename = "B")]
             B,
         }
 
@@ -37,6 +45,7 @@ pub fn derive_deserialize(_input: TokenStream) -> TokenStream {
         #[serde(rename_all = "snake_case")]
         enum __FooDe {
             A,
+            #[serde(rename = "B")]
             B,
         }
 
