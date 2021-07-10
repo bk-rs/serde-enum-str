@@ -89,3 +89,34 @@ mod without_other {
         assert_eq!(serde_json::from_str::<Foo>(r#""B""#).unwrap(), Foo::B);
     }
 }
+
+mod with_from_str_other {
+    use super::*;
+
+    use std::net::Ipv4Addr;
+
+    #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
+    enum Foo {
+        A,
+        #[serde(other)]
+        Other(Ipv4Addr),
+    }
+
+    #[test]
+    fn test_ser() {
+        assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""A""#);
+        assert_eq!(
+            serde_json::to_string(&Foo::Other(Ipv4Addr::new(127, 0, 0, 1))).unwrap(),
+            r#""127.0.0.1""#
+        );
+    }
+
+    #[test]
+    fn test_de() {
+        assert_eq!(serde_json::from_str::<Foo>(r#""A""#).unwrap(), Foo::A);
+        assert_eq!(
+            serde_json::from_str::<Foo>(r#""127.0.0.1""#).unwrap(),
+            Foo::Other(Ipv4Addr::new(127, 0, 0, 1))
+        );
+    }
+}
