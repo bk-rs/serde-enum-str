@@ -14,7 +14,7 @@ mod simple {
     }
 
     #[test]
-    fn test_serialize() {
+    fn test_ser() {
         assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""a""#);
         assert_eq!(serde_json::to_string(&Foo::B).unwrap(), r#""B""#);
         assert_eq!(
@@ -24,7 +24,7 @@ mod simple {
     }
 
     #[test]
-    fn test_deserialize() {
+    fn test_de() {
         assert_eq!(serde_json::from_str::<Foo>(r#""a""#).unwrap(), Foo::A);
         assert_eq!(serde_json::from_str::<Foo>(r#""B""#).unwrap(), Foo::B);
         assert_eq!(

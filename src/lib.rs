@@ -4,13 +4,11 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse_macro_input;
 
-mod parse;
-
-use self::parse::Input;
+mod input;
 
 #[proc_macro_derive(Serialize_enum_str, attributes(serde))]
 pub fn derive_serialize(input: TokenStream) -> TokenStream {
-    let _input = parse_macro_input!(input as Input);
+    let _input = parse_macro_input!(input as self::input::Input);
 
     TokenStream::from(quote! {
         #[derive(serde::Serialize)]

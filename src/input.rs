@@ -26,6 +26,7 @@ pub struct Variant {
 #[derive(Clone)]
 pub struct DefaultVariant {
     pub ident: Ident,
+    pub r#type: Type,
 }
 
 impl Parse for Input {
@@ -40,8 +41,6 @@ impl Parse for Input {
             _ => return Err(SynError::new(call_site, "input must be an enum")),
         };
 
-        println!("{:?}", enum_derive_input);
-
         let ident = enum_derive_input.ident;
         let rename_all = enum_derive_input.rename_all;
 
@@ -55,9 +54,20 @@ impl Parse for Input {
                         "must be a tuple variant",
                     ));
                 }
+                let mut types_iter = enum_variant.fields.to_owned().into_iter();
+                let r#type = types_iter.next().ok_or_else(|| {
+                    SynError::new(enum_variant.ident.span(), "must be at least one type")
+                })?;
+                if types_iter.next().is_some() {
+                    return Err(SynError::new(
+                        enum_variant.ident.span(),
+                        "must be at least one type",
+                    ));
+                }
 
                 default_variants.push(DefaultVariant {
                     ident: enum_variant.ident.to_owned(),
+                    r#type,
                 });
             } else {
                 if !enum_variant.fields.is_unit() {
@@ -72,6 +82,23 @@ impl Parse for Input {
                     rename: enum_variant.rename.to_owned(),
                 });
             }
+        }
+        if variants.is_empty() && default_variants.is_empty() {
+            return Err(SynError::new(
+                call_site,
+                "there must be at least one variant",
+            ));
+        }
+        if default_variants.len() > 1 {
+            return Err(SynError::new(
+                call_site,
+                "only one variant can be #[serde(other)]",
+            ));
+        }
+
+        let generics = enum_derive_input.generics;
+        if !generics.params.is_empty() || generics.where_clause.is_some() {
+            return Err(SynError::new(call_site, "generic enum is not supported"));
         }
 
         let default_variant = default_variants.first().cloned();
