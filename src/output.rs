@@ -54,8 +54,25 @@ impl<'a> ToTokens for SerdeEnum<'a> {
                 } else {
                     quote!()
                 };
+                let serde_alias = match self.category {
+                    SerdeEnumCategory::Ser => quote!(),
+                    SerdeEnumCategory::De => {
+                        if let Some(alias_vec) = &variant.alias_vec {
+                            let tokens = alias_vec
+                                .iter()
+                                .map(|alias| quote!(#[serde(alias = #alias)]))
+                                .collect::<Vec<_>>();
+                            quote! {
+                                #(#tokens)*
+                            }
+                        } else {
+                            quote!()
+                        }
+                    }
+                };
                 quote! {
                     #serde_rename
+                    #serde_alias
                     #ident,
                 }
             })

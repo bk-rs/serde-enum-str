@@ -21,6 +21,7 @@ pub struct Input {
 pub struct Variant {
     pub ident: Ident,
     pub rename: Option<String>,
+    pub alias_vec: Option<Vec<String>>,
 }
 
 #[derive(Clone)]
@@ -80,6 +81,11 @@ impl Parse for Input {
                 variants.push(Variant {
                     ident: enum_variant.ident.to_owned(),
                     rename: enum_variant.rename.to_owned(),
+                    alias_vec: if enum_variant.alias_vec.is_empty() {
+                        None
+                    } else {
+                        Some(enum_variant.alias_vec.to_owned())
+                    },
                 });
             }
         }
@@ -134,6 +140,8 @@ struct EnumVariant {
 
     #[darling(default)]
     rename: Option<String>,
+    #[darling(default, multiple, rename = "alias")]
+    alias_vec: Vec<String>,
     #[darling(default, rename = "other", map = "Self::make_is_other")]
     is_other: bool,
 }
