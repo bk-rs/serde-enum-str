@@ -126,3 +126,43 @@ mod with_from_str_other {
         );
     }
 }
+
+mod with_independent_rename_all {
+    use super::*;
+
+    #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
+    #[serde(rename_all(serialize = "snake_case", deserialize = "UPPERCASE"))]
+    enum Foo {
+        A,
+    }
+
+    #[test]
+    fn test_ser() {
+        assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""a""#);
+    }
+
+    #[test]
+    fn test_de() {
+        assert_eq!(serde_json::from_str::<Foo>(r#""A""#).unwrap(), Foo::A);
+    }
+}
+
+mod with_independent_rename {
+    use super::*;
+
+    #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
+    enum Foo {
+        #[serde(rename(serialize = "aa", deserialize = "AA"))]
+        A,
+    }
+
+    #[test]
+    fn test_ser() {
+        assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""aa""#);
+    }
+
+    #[test]
+    fn test_de() {
+        assert_eq!(serde_json::from_str::<Foo>(r#""AA""#).unwrap(), Foo::A);
+    }
+}

@@ -11,16 +11,18 @@ use syn::{
     Attribute, DeriveInput, Error as SynError, Expr, Generics, Ident, Type, Visibility,
 };
 
+use crate::attributes::{RenameAllAttribute, RenameAttribute};
+
 pub struct Input {
     pub ident: Ident,
-    pub rename_all: Option<String>,
+    pub rename_all: Option<RenameAllAttribute>,
     pub variants: Vec<Variant>,
     pub default_variant: Option<DefaultVariant>,
 }
 
 pub struct Variant {
     pub ident: Ident,
-    pub rename: Option<String>,
+    pub rename: Option<RenameAttribute>,
     pub alias_vec: Option<Vec<String>>,
 }
 
@@ -60,10 +62,7 @@ impl Parse for Input {
                     SynError::new(enum_variant.ident.span(), "must be at least one type")
                 })?;
                 if types_iter.next().is_some() {
-                    return Err(SynError::new(
-                        enum_variant.ident.span(),
-                        "must be at least one type",
-                    ));
+                    return Err(SynError::new(enum_variant.ident.span(), "must be one type"));
                 }
 
                 default_variants.push(DefaultVariant {
@@ -127,7 +126,7 @@ struct EnumDeriveInput {
     data: Data<EnumVariant, Ignored>,
 
     #[darling(default)]
-    rename_all: Option<String>,
+    rename_all: Option<RenameAllAttribute>,
 }
 
 #[derive(FromVariant, Debug)]
@@ -139,7 +138,7 @@ struct EnumVariant {
     discriminant: Option<Expr>,
 
     #[darling(default)]
-    rename: Option<String>,
+    rename: Option<RenameAttribute>,
     #[darling(default, multiple, rename = "alias")]
     alias_vec: Vec<String>,
     #[darling(default, rename = "other", map = "Self::make_is_other")]
