@@ -3,6 +3,8 @@ use serde_enum_str::{Deserialize_enum_str, Serialize_enum_str};
 mod simple {
     use super::*;
 
+    use std::convert::TryFrom as _;
+
     #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
     #[serde(rename_all = "snake_case")]
     enum Foo {
@@ -73,6 +75,29 @@ mod simple {
         assert_eq!(Foo::D.to_string(), "D");
         assert_eq!(Foo::E.to_string(), "e");
         assert_eq!(Foo::Other("z".to_owned()).to_string(), "z");
+    }
+
+    #[test]
+    fn test_from_str() {
+        assert_eq!("a".parse::<Foo>().unwrap(), Foo::A);
+        assert_eq!("aa".parse::<Foo>().unwrap(), Foo::A);
+        assert_eq!("B".parse::<Foo>().unwrap(), Foo::B);
+        assert_eq!("bb".parse::<Foo>().unwrap(), Foo::B);
+        assert_eq!("bbb".parse::<Foo>().unwrap(), Foo::B);
+        assert_eq!("c".parse::<Foo>().unwrap(), Foo::Other("c".to_owned()));
+        assert_eq!("d".parse::<Foo>().unwrap(), Foo::D);
+        assert_eq!("e".parse::<Foo>().unwrap(), Foo::Other("e".to_owned()));
+        assert_eq!("z".parse::<Foo>().unwrap(), Foo::Other("z".to_owned()));
+    }
+
+    #[test]
+    fn test_try_from_string() {
+        assert_eq!(Foo::try_from("a".to_owned()).unwrap(), Foo::A);
+    }
+
+    #[test]
+    fn test_try_from_str() {
+        assert_eq!(Foo::try_from("a").unwrap(), Foo::A);
     }
 }
 

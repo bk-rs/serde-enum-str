@@ -45,7 +45,7 @@ impl ToTokens for InputWrapper {
 
         let token = quote! {
             impl serde::Serialize for #impl_ident {
-                fn serialize<S>(&self, serializer: S) -> core::result::Result<S::Ok, S::Error>
+                fn serialize<S>(&self, serializer: S) -> ::core::result::Result<S::Ok, S::Error>
                 where
                     S: serde::Serializer,
                 {
@@ -88,6 +88,7 @@ impl ToTokens for InputWrapper {
         };
 
         let token = quote! {
+            // https://docs.serde.rs/serde/trait.Serializer.html#foreign-impls
             impl ::core::fmt::Display for #impl_ident {
                 fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
                     use serde::Serialize as _;

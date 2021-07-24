@@ -20,6 +20,7 @@ impl ToTokens for InputWrapper {
         };
         tokens.append_all(token);
 
+        //
         let de_untagged_enum_ident = format_ident!("{}Untagged", de_enum_ident);
         let de_untagged_enum_other_variant = if let Some(default_variant) = &input.default_variant {
             let r#type = &default_variant.r#type;
@@ -39,7 +40,10 @@ impl ToTokens for InputWrapper {
         };
         tokens.append_all(token);
 
+        //
         let impl_ident = &input.ident;
+
+        //
         let impl_variants = &input
             .variants
             .iter()
@@ -58,9 +62,11 @@ impl ToTokens for InputWrapper {
         } else {
             quote!()
         };
+
+        //
         let token = quote! {
             impl<'de> serde::Deserialize<'de> for #impl_ident {
-                fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
+                fn deserialize<D>(deserializer: D) -> ::core::result::Result<Self, D::Error>
                 where D: serde::Deserializer<'de>
                 {
                     let value = match <#de_untagged_enum_ident as serde::Deserialize>::deserialize(deserializer)? {
@@ -71,6 +77,41 @@ impl ToTokens for InputWrapper {
                     };
 
                     Ok(value)
+                }
+            }
+        };
+        tokens.append_all(token);
+
+        //
+        let token = quote! {
+            // https://docs.serde.rs/serde/de/trait.IntoDeserializer.html
+            impl ::core::str::FromStr for #impl_ident {
+                type Err = serde::de::value::Error;
+
+                fn from_str(s: &str) -> ::core::result::Result<Self, Self::Err> {
+                    use serde::{Deserialize as _, de::IntoDeserializer as _};
+
+                    Self::deserialize(s.into_deserializer())
+                }
+            }
+        };
+        tokens.append_all(token);
+
+        //
+        let token = quote! {
+            impl ::core::convert::TryFrom<::std::string::String> for #impl_ident {
+                type Error = serde::de::value::Error;
+
+                fn try_from(value: ::std::string::String) -> ::core::result::Result<Self, Self::Error> {
+                    value.parse()
+                }
+            }
+
+            impl ::core::convert::TryFrom<&str> for #impl_ident {
+                type Error = serde::de::value::Error;
+
+                fn try_from(value: &str) -> ::core::result::Result<Self, Self::Error> {
+                    value.parse()
                 }
             }
         };
