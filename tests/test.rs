@@ -12,6 +12,12 @@ mod simple {
         #[serde(alias = "bb")]
         #[serde(alias = "bbb")]
         B,
+        #[serde(skip)]
+        C,
+        #[serde(skip_serializing)]
+        D,
+        #[serde(skip_deserializing)]
+        E,
         #[serde(other)]
         Other(String),
     }
@@ -20,9 +26,20 @@ mod simple {
     fn test_ser() {
         assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""a""#);
         assert_eq!(serde_json::to_string(&Foo::B).unwrap(), r#""B""#);
+        assert!(serde_json::to_string(&Foo::C)
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("::C cannot be serialized"));
+        assert!(serde_json::to_string(&Foo::D)
+            .err()
+            .unwrap()
+            .to_string()
+            .contains("::D cannot be serialized"));
+        assert_eq!(serde_json::to_string(&Foo::E).unwrap(), r#""e""#);
         assert_eq!(
-            serde_json::to_string(&Foo::Other("c".to_owned())).unwrap(),
-            r#""c""#
+            serde_json::to_string(&Foo::Other("z".to_owned())).unwrap(),
+            r#""z""#
         );
     }
 
@@ -36,6 +53,15 @@ mod simple {
         assert_eq!(
             serde_json::from_str::<Foo>(r#""c""#).unwrap(),
             Foo::Other("c".to_owned())
+        );
+        assert_eq!(serde_json::from_str::<Foo>(r#""d""#).unwrap(), Foo::D);
+        assert_eq!(
+            serde_json::from_str::<Foo>(r#""e""#).unwrap(),
+            Foo::Other("e".to_owned())
+        );
+        assert_eq!(
+            serde_json::from_str::<Foo>(r#""z""#).unwrap(),
+            Foo::Other("z".to_owned())
         );
     }
 }

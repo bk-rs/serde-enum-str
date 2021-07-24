@@ -100,9 +100,26 @@ impl<'a> ToTokens for SerdeEnum<'a> {
                         }
                     }
                 };
+                let serde_skip = match self.category {
+                    SerdeEnumCategory::Ser => {
+                        if variant.skip_serializing == Some(true) {
+                            quote!(#[serde(skip_serializing)])
+                        } else {
+                            quote!()
+                        }
+                    }
+                    SerdeEnumCategory::De => {
+                        if variant.skip_deserializing == Some(true) {
+                            quote!(#[serde(skip_deserializing)])
+                        } else {
+                            quote!()
+                        }
+                    }
+                };
                 quote! {
                     #serde_rename
                     #serde_alias
+                    #serde_skip
                     #ident,
                 }
             })

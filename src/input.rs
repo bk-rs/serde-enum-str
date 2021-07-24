@@ -24,6 +24,8 @@ pub struct Variant {
     pub ident: Ident,
     pub rename: Option<RenameAttribute>,
     pub alias_vec: Option<Vec<String>>,
+    pub skip_serializing: Option<bool>,
+    pub skip_deserializing: Option<bool>,
 }
 
 #[derive(Clone)]
@@ -85,6 +87,8 @@ impl Parse for Input {
                     } else {
                         Some(enum_variant.alias_vec.to_owned())
                     },
+                    skip_serializing: enum_variant.skip_serializing.or(enum_variant.skip),
+                    skip_deserializing: enum_variant.skip_deserializing.or(enum_variant.skip),
                 });
             }
         }
@@ -141,6 +145,12 @@ struct EnumVariant {
     rename: Option<RenameAttribute>,
     #[darling(default, multiple, rename = "alias")]
     alias_vec: Vec<String>,
+    #[darling(default)]
+    skip: Option<bool>,
+    #[darling(default)]
+    skip_serializing: Option<bool>,
+    #[darling(default)]
+    skip_deserializing: Option<bool>,
     #[darling(default, rename = "other", map = "Self::make_is_other")]
     is_other: bool,
 }
