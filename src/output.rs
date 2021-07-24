@@ -39,9 +39,16 @@ impl<'a> ToTokens for SerdeEnum<'a> {
             },
         };
         let serde_rename_all = if let Some(rename_all) = &input.rename_all {
-            let serialize = &rename_all.serialize;
-            let deserialize = &rename_all.deserialize;
-            quote!(#[serde(rename_all(serialize = #serialize, deserialize = #deserialize))])
+            match self.category {
+                SerdeEnumCategory::Ser => {
+                    let serialize = &rename_all.serialize;
+                    quote!(#[serde(rename_all(serialize = #serialize))])
+                }
+                SerdeEnumCategory::De => {
+                    let deserialize = &rename_all.deserialize;
+                    quote!(#[serde(rename_all( deserialize = #deserialize))])
+                }
+            }
         } else {
             quote!()
         };
@@ -52,9 +59,16 @@ impl<'a> ToTokens for SerdeEnum<'a> {
             .map(|variant| {
                 let ident = &variant.ident;
                 let serde_rename = if let Some(rename) = &variant.rename {
-                    let serialize = &rename.serialize;
-                    let deserialize = &rename.deserialize;
-                    quote!(#[serde(rename(serialize = #serialize, deserialize = #deserialize))])
+                    match self.category {
+                        SerdeEnumCategory::Ser => {
+                            let serialize = &rename.serialize;
+                            quote!(#[serde(rename(serialize = #serialize))])
+                        }
+                        SerdeEnumCategory::De => {
+                            let deserialize = &rename.deserialize;
+                            quote!(#[serde(rename(deserialize = #deserialize))])
+                        }
+                    }
                 } else {
                     quote!()
                 };
