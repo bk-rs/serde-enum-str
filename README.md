@@ -9,8 +9,8 @@ https://stackoverflow.com/questions/57469527
 ## Dev
 
 ```
-cargo clippy --all-features -- -D clippy::all
-cargo +nightly clippy --all-features -- -D clippy::all
+cargo clippy --all-features --tests -- -D clippy::all
+cargo +nightly clippy --all-features --tests -- -D clippy::all
 
 cargo fmt -- --check
 
