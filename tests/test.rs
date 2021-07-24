@@ -136,14 +136,22 @@ mod with_independent_rename_all {
         A,
     }
 
+    #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
+    #[serde(rename_all(serialize = "snake_case"))]
+    enum Bar {
+        A,
+    }
+
     #[test]
     fn test_ser() {
         assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""a""#);
+        assert_eq!(serde_json::to_string(&Bar::A).unwrap(), r#""a""#);
     }
 
     #[test]
     fn test_de() {
         assert_eq!(serde_json::from_str::<Foo>(r#""A""#).unwrap(), Foo::A);
+        assert_eq!(serde_json::from_str::<Bar>(r#""A""#).unwrap(), Bar::A);
     }
 }
 
@@ -155,14 +163,21 @@ mod with_independent_rename {
         #[serde(rename(serialize = "aa", deserialize = "AA"))]
         A,
     }
+    #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
+    enum Bar {
+        #[serde(rename(serialize = "aa"))]
+        A,
+    }
 
     #[test]
     fn test_ser() {
         assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""aa""#);
+        assert_eq!(serde_json::to_string(&Bar::A).unwrap(), r#""aa""#);
     }
 
     #[test]
     fn test_de() {
         assert_eq!(serde_json::from_str::<Foo>(r#""AA""#).unwrap(), Foo::A);
+        assert_eq!(serde_json::from_str::<Bar>(r#""A""#).unwrap(), Bar::A);
     }
 }

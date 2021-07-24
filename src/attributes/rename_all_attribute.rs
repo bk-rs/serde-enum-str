@@ -1,24 +1,47 @@
 use darling::{Error as DarlingError, FromMeta};
-use syn::NestedMeta;
+use syn::{Lit, Meta, NestedMeta};
 
 #[derive(Debug, Clone)]
 pub struct RenameAllAttribute {
-    pub serialize: String,
-    pub deserialize: String,
+    pub serialize: Option<String>,
+    pub deserialize: Option<String>,
 }
 impl FromMeta for RenameAllAttribute {
     fn from_string(s: &str) -> Result<Self, DarlingError> {
         Ok(Self {
-            serialize: s.to_owned(),
-            deserialize: s.to_owned(),
+            serialize: Some(s.to_owned()),
+            deserialize: Some(s.to_owned()),
         })
     }
 
     fn from_list(items: &[NestedMeta]) -> Result<Self, DarlingError> {
-        println!("TODO {:?}", items);
+        let mut serialize = None;
+        let mut deserialize = None;
+        for item in items {
+            match item {
+                NestedMeta::Meta(Meta::NameValue(value)) if value.path.is_ident("serialize") => {
+                    if let Lit::Str(s) = &value.lit {
+                        serialize = Some(s.value());
+                    }
+                }
+                NestedMeta::Meta(Meta::NameValue(value)) if value.path.is_ident("deserialize") => {
+                    if let Lit::Str(s) = &value.lit {
+                        deserialize = Some(s.value());
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        if serialize.is_none() && deserialize.is_none() {
+            return Err(DarlingError::custom(
+                "must be at least one the serialize and deserialize",
+            ));
+        }
+
         Ok(Self {
-            serialize: "snake_case".to_owned(),
-            deserialize: "UPPERCASE".to_owned(),
+            serialize,
+            deserialize,
         })
     }
 }

@@ -41,12 +41,18 @@ impl<'a> ToTokens for SerdeEnum<'a> {
         let serde_rename_all = if let Some(rename_all) = &input.rename_all {
             match self.category {
                 SerdeEnumCategory::Ser => {
-                    let serialize = &rename_all.serialize;
-                    quote!(#[serde(rename_all(serialize = #serialize))])
+                    if let Some(serialize) = &rename_all.serialize {
+                        quote!(#[serde(rename_all(serialize = #serialize))])
+                    } else {
+                        quote!()
+                    }
                 }
                 SerdeEnumCategory::De => {
-                    let deserialize = &rename_all.deserialize;
-                    quote!(#[serde(rename_all( deserialize = #deserialize))])
+                    if let Some(deserialize) = &rename_all.deserialize {
+                        quote!(#[serde(rename_all( deserialize = #deserialize))])
+                    } else {
+                        quote!()
+                    }
                 }
             }
         } else {
@@ -61,12 +67,18 @@ impl<'a> ToTokens for SerdeEnum<'a> {
                 let serde_rename = if let Some(rename) = &variant.rename {
                     match self.category {
                         SerdeEnumCategory::Ser => {
-                            let serialize = &rename.serialize;
-                            quote!(#[serde(rename(serialize = #serialize))])
+                            if let Some(serialize) = &rename.serialize {
+                                quote!(#[serde(rename(serialize = #serialize))])
+                            } else {
+                                quote!()
+                            }
                         }
                         SerdeEnumCategory::De => {
-                            let deserialize = &rename.deserialize;
-                            quote!(#[serde(rename(deserialize = #deserialize))])
+                            if let Some(deserialize) = &rename.deserialize {
+                                quote!(#[serde(rename(deserialize = #deserialize))])
+                            } else {
+                                quote!()
+                            }
                         }
                     }
                 } else {
