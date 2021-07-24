@@ -20,8 +20,11 @@ impl ToTokens for InputWrapper {
         };
         tokens.append_all(token);
 
+        //
         let impl_ident = &input.ident;
-        let impl_variants = &input
+
+        //
+        let impl_serialize_variants = &input
             .variants
             .iter()
             .map(|variant| {
@@ -31,7 +34,7 @@ impl ToTokens for InputWrapper {
                 }
             })
             .collect::<Vec<_>>();
-        let impl_default_variant = if let Some(default_variant) = &input.default_variant {
+        let impl_serialize_default_variant = if let Some(default_variant) = &input.default_variant {
             let ident = &default_variant.ident;
             quote! {
                 Self::#ident(ref s) => return serde::Serialize::serialize(s, serializer),
@@ -47,10 +50,52 @@ impl ToTokens for InputWrapper {
                     S: serde::Serializer,
                 {
                     let value = match *self {
-                        #(#impl_variants)*
-                        #impl_default_variant
+                        #(#impl_serialize_variants)*
+                        #impl_serialize_default_variant
                     };
                     serde::Serialize::serialize(&value, serializer)
+                }
+            }
+        };
+        tokens.append_all(token);
+
+        //
+        let impl_display_variants = &input
+            .variants
+            .iter()
+            .map(|variant| {
+                let ident = &variant.ident;
+                if variant.skip_serializing == Some(true) {
+                    // TODO, match rename_all
+                    let name = ident.to_string();
+                    quote! {
+                        Self::#ident => write!(f, "{}", #name),
+                    }
+                } else {
+                    quote! {
+                        Self::#ident => self.serialize(f),
+                    }
+                }
+            })
+            .collect::<Vec<_>>();
+        let impl_display_default_variant = if let Some(default_variant) = &input.default_variant {
+            let ident = &default_variant.ident;
+            quote! {
+                Self::#ident(ref s) => write!(f, "{}", s),
+            }
+        } else {
+            quote!()
+        };
+
+        let token = quote! {
+            impl ::core::fmt::Display for #impl_ident {
+                fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                    use serde::Serialize as _;
+
+                    match *self {
+                        #(#impl_display_variants)*
+                        #impl_display_default_variant
+                    }
                 }
             }
         };

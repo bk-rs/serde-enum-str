@@ -64,6 +64,16 @@ mod simple {
             Foo::Other("z".to_owned())
         );
     }
+
+    #[test]
+    fn test_to_string() {
+        assert_eq!(Foo::A.to_string(), "a");
+        assert_eq!(Foo::B.to_string(), "B");
+        assert_eq!(Foo::C.to_string(), "C");
+        assert_eq!(Foo::D.to_string(), "D");
+        assert_eq!(Foo::E.to_string(), "e");
+        assert_eq!(Foo::Other("z".to_owned()).to_string(), "z");
+    }
 }
 
 mod without_rename {
