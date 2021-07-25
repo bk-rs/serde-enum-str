@@ -1,12 +1,10 @@
-//! Serialize and deserialize enum string
+//! Serialize and deserialize enum string.
 //!
 //! ```Cargo.toml
 //! [dependencies]
-//! serde = { version = "1.0", features = ["derive"] }
+//! serde = "1.0"
 //! serde-enum-str = "0.1"
 //! ```
-//!
-//! # Examples
 //!
 //! ```
 //! use serde_enum_str::{Deserialize_enum_str, Serialize_enum_str};
@@ -23,11 +21,15 @@
 //!
 //! fn main() -> serde_json::Result<()> {
 //!     assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""a""#);
+//!     assert_eq!(serde_json::from_str::<Foo>(r#""a""#).unwrap(), Foo::A);
 //!
 //!     assert_eq!(
 //!         serde_json::from_str::<Foo>(r#""c""#).unwrap(),
 //!         Foo::Other("c".to_owned())
 //!     );
+//!
+//!     assert_eq!(Foo::A.to_string(), "a");
+//!     assert_eq!("a".parse::<Foo>().unwrap(), Foo::A);
 //!
 //!     Ok(())
 //! }
