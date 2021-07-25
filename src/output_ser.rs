@@ -36,8 +36,16 @@ impl ToTokens for InputWrapper {
             .collect::<Vec<_>>();
         let impl_serialize_default_variant = if let Some(default_variant) = &input.default_variant {
             let ident = &default_variant.ident;
-            quote! {
-                Self::#ident(ref s) => return serde::Serialize::serialize(s, serializer),
+            if default_variant.r#type.is_some() {
+                quote! {
+                    Self::#ident(ref s) => return serde::Serialize::serialize(s, serializer),
+                }
+            } else {
+                // TODO, match rename_all
+                let name = ident.to_string();
+                quote! {
+                    Self::#ident => return serde::Serialize::serialize(#name, serializer),
+                }
             }
         } else {
             quote!()
@@ -80,8 +88,16 @@ impl ToTokens for InputWrapper {
             .collect::<Vec<_>>();
         let impl_display_default_variant = if let Some(default_variant) = &input.default_variant {
             let ident = &default_variant.ident;
-            quote! {
-                Self::#ident(ref s) => write!(f, "{}", s),
+            if default_variant.r#type.is_some() {
+                quote! {
+                    Self::#ident(ref s) => write!(f, "{}", s),
+                }
+            } else {
+                // TODO, match rename_all
+                let name = ident.to_string();
+                quote! {
+                    Self::#ident => write!(f, "{}", #name),
+                }
             }
         } else {
             quote!()

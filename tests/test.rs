@@ -242,3 +242,30 @@ mod with_independent_rename {
         assert_eq!(serde_json::from_str::<Bar>(r#""A""#).unwrap(), Bar::A);
     }
 }
+
+mod with_unit_other {
+    use super::*;
+
+    #[derive(Deserialize_enum_str, Serialize_enum_str, PartialEq, Debug)]
+    enum Foo {
+        A,
+        #[serde(other)]
+        Other,
+    }
+
+    #[test]
+    fn test_ser() {
+        assert_eq!(serde_json::to_string(&Foo::A).unwrap(), r#""A""#);
+        assert_eq!(serde_json::to_string(&Foo::Other).unwrap(), r#""Other""#);
+    }
+
+    #[test]
+    fn test_de() {
+        assert_eq!(serde_json::from_str::<Foo>(r#""A""#).unwrap(), Foo::A);
+        assert_eq!(
+            serde_json::from_str::<Foo>(r#""Other""#).unwrap(),
+            Foo::Other
+        );
+        assert_eq!(serde_json::from_str::<Foo>(r#""foo""#).unwrap(), Foo::Other);
+    }
+}

@@ -23,9 +23,14 @@ impl ToTokens for InputWrapper {
         //
         let de_untagged_enum_ident = format_ident!("{}Untagged", de_enum_ident);
         let de_untagged_enum_other_variant = if let Some(default_variant) = &input.default_variant {
-            let r#type = &default_variant.r#type;
-            quote! {
-                __Other(#r#type),
+            if let Some(r#type) = &default_variant.r#type {
+                quote! {
+                    __Other(#r#type),
+                }
+            } else {
+                quote! {
+                    __Other(String),
+                }
             }
         } else {
             quote!()
@@ -56,8 +61,14 @@ impl ToTokens for InputWrapper {
             .collect::<Vec<_>>();
         let impl_default_variant = if let Some(default_variant) = &input.default_variant {
             let ident = &default_variant.ident;
-            quote! {
-                #de_untagged_enum_ident::__Other(v) => #impl_ident::#ident(v)
+            if default_variant.r#type.is_some() {
+                quote! {
+                    #de_untagged_enum_ident::__Other(v) => #impl_ident::#ident(v)
+                }
+            } else {
+                quote! {
+                    #de_untagged_enum_ident::__Other(_) => #impl_ident::#ident
+                }
             }
         } else {
             quote!()

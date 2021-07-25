@@ -31,7 +31,7 @@ pub struct Variant {
 #[derive(Clone)]
 pub struct DefaultVariant {
     pub ident: Ident,
-    pub r#type: Type,
+    pub r#type: Option<Type>,
 }
 
 impl Parse for Input {
@@ -53,24 +53,30 @@ impl Parse for Input {
         let mut default_variants = vec![];
         for enum_variant in enum_variants {
             if enum_variant.is_other {
-                if !enum_variant.fields.is_tuple() {
+                if enum_variant.fields.is_tuple() {
+                    let mut types_iter = enum_variant.fields.to_owned().into_iter();
+                    let r#type = types_iter.next().ok_or_else(|| {
+                        SynError::new(enum_variant.ident.span(), "must be at least one type")
+                    })?;
+                    if types_iter.next().is_some() {
+                        return Err(SynError::new(enum_variant.ident.span(), "must be one type"));
+                    }
+
+                    default_variants.push(DefaultVariant {
+                        ident: enum_variant.ident.to_owned(),
+                        r#type: Some(r#type),
+                    });
+                } else if enum_variant.fields.is_unit() {
+                    default_variants.push(DefaultVariant {
+                        ident: enum_variant.ident.to_owned(),
+                        r#type: None,
+                    });
+                } else {
                     return Err(SynError::new(
                         enum_variant.ident.span(),
                         "must be a tuple variant",
                     ));
                 }
-                let mut types_iter = enum_variant.fields.to_owned().into_iter();
-                let r#type = types_iter.next().ok_or_else(|| {
-                    SynError::new(enum_variant.ident.span(), "must be at least one type")
-                })?;
-                if types_iter.next().is_some() {
-                    return Err(SynError::new(enum_variant.ident.span(), "must be one type"));
-                }
-
-                default_variants.push(DefaultVariant {
-                    ident: enum_variant.ident.to_owned(),
-                    r#type,
-                });
             } else {
                 if !enum_variant.fields.is_unit() {
                     return Err(SynError::new(
