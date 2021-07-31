@@ -41,8 +41,12 @@ impl ToTokens for InputWrapper {
                     Self::#ident(ref s) => return serde::Serialize::serialize(s, serializer),
                 }
             } else {
-                // TODO, match rename_all
-                let name = ident.to_string();
+                let mut name = ident.to_string();
+                if let Some(rename_all) = &input.rename_all {
+                    if let Some(rename_rule) = &rename_all.serialize {
+                        name = rename_rule.apply_to_variant(&name);
+                    }
+                }
                 quote! {
                     Self::#ident => return serde::Serialize::serialize(#name, serializer),
                 }
@@ -74,8 +78,12 @@ impl ToTokens for InputWrapper {
             .map(|variant| {
                 let ident = &variant.ident;
                 if variant.skip_serializing == Some(true) {
-                    // TODO, match rename_all
-                    let name = ident.to_string();
+                    let mut name = ident.to_string();
+                    if let Some(rename_all) = &input.rename_all {
+                        if let Some(rename_rule) = &rename_all.serialize {
+                            name = rename_rule.apply_to_variant(&name);
+                        }
+                    }
                     quote! {
                         Self::#ident => write!(f, "{}", #name),
                     }
@@ -93,8 +101,12 @@ impl ToTokens for InputWrapper {
                     Self::#ident(ref s) => write!(f, "{}", s),
                 }
             } else {
-                // TODO, match rename_all
-                let name = ident.to_string();
+                let mut name = ident.to_string();
+                if let Some(rename_all) = &input.rename_all {
+                    if let Some(rename_rule) = &rename_all.serialize {
+                        name = rename_rule.apply_to_variant(&name);
+                    }
+                }
                 quote! {
                     Self::#ident => write!(f, "{}", #name),
                 }

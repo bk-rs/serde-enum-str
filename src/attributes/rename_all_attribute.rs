@@ -1,16 +1,20 @@
 use darling::{Error as DarlingError, FromMeta};
+use serde_rename_rule::RenameRule;
 use syn::{Lit, Meta, NestedMeta};
 
 #[derive(Debug, Clone)]
 pub struct RenameAllAttribute {
-    pub serialize: Option<String>,
-    pub deserialize: Option<String>,
+    pub serialize: Option<RenameRule>,
+    pub deserialize: Option<RenameRule>,
 }
 impl FromMeta for RenameAllAttribute {
     fn from_string(s: &str) -> Result<Self, DarlingError> {
+        let rule = RenameRule::from_rename_all_str(s)
+            .map_err(|_| DarlingError::custom(format!("unknown rename_all value [{}]", s)))?;
+
         Ok(Self {
-            serialize: Some(s.to_owned()),
-            deserialize: Some(s.to_owned()),
+            serialize: Some(rule.to_owned()),
+            deserialize: Some(rule),
         })
     }
 
@@ -21,12 +25,24 @@ impl FromMeta for RenameAllAttribute {
             match item {
                 NestedMeta::Meta(Meta::NameValue(value)) if value.path.is_ident("serialize") => {
                     if let Lit::Str(s) = &value.lit {
-                        serialize = Some(s.value());
+                        let rule = RenameRule::from_rename_all_str(&s.value()).map_err(|_| {
+                            DarlingError::custom(format!(
+                                "unknown rename_all value [{}]",
+                                s.value()
+                            ))
+                        })?;
+                        serialize = Some(rule);
                     }
                 }
                 NestedMeta::Meta(Meta::NameValue(value)) if value.path.is_ident("deserialize") => {
                     if let Lit::Str(s) = &value.lit {
-                        deserialize = Some(s.value());
+                        let rule = RenameRule::from_rename_all_str(&s.value()).map_err(|_| {
+                            DarlingError::custom(format!(
+                                "unknown rename_all value [{}]",
+                                s.value()
+                            ))
+                        })?;
+                        deserialize = Some(rule);
                     }
                 }
                 _ => {}

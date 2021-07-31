@@ -42,14 +42,16 @@ impl<'a> ToTokens for SerdeEnum<'a> {
             match self.category {
                 SerdeEnumCategory::Ser => {
                     if let Some(serialize) = &rename_all.serialize {
-                        quote!(#[serde(rename_all(serialize = #serialize))])
+                        let s = serialize.to_rename_all_str();
+                        quote!(#[serde(rename_all(serialize = #s))])
                     } else {
                         quote!()
                     }
                 }
                 SerdeEnumCategory::De => {
                     if let Some(deserialize) = &rename_all.deserialize {
-                        quote!(#[serde(rename_all( deserialize = #deserialize))])
+                        let s = deserialize.to_rename_all_str();
+                        quote!(#[serde(rename_all(deserialize = #s))])
                     } else {
                         quote!()
                     }
