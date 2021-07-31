@@ -130,6 +130,7 @@ impl<'a> ToTokens for SerdeEnum<'a> {
         let token = quote! {
             #derive_serde
             #serde_rename_all
+            #[allow(dead_code)]
             enum #ident {
                 #(#variants)*
             }
