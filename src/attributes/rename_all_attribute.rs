@@ -10,7 +10,7 @@ pub struct RenameAllAttribute {
 impl FromMeta for RenameAllAttribute {
     fn from_string(s: &str) -> Result<Self, DarlingError> {
         let rule = RenameRule::from_rename_all_str(s)
-            .map_err(|_| DarlingError::custom(format!("unknown rename_all value [{}]", s)))?;
+            .map_err(|err| DarlingError::custom(err.msg_for_rename_all()))?;
 
         Ok(Self {
             serialize: Some(rule.to_owned()),
@@ -25,23 +25,15 @@ impl FromMeta for RenameAllAttribute {
             match item {
                 NestedMeta::Meta(Meta::NameValue(value)) if value.path.is_ident("serialize") => {
                     if let Lit::Str(s) = &value.lit {
-                        let rule = RenameRule::from_rename_all_str(&s.value()).map_err(|_| {
-                            DarlingError::custom(format!(
-                                "unknown rename_all value [{}]",
-                                s.value()
-                            ))
-                        })?;
+                        let rule = RenameRule::from_rename_all_str(&s.value())
+                            .map_err(|err| DarlingError::custom(err.msg_for_rename_all()))?;
                         serialize = Some(rule);
                     }
                 }
                 NestedMeta::Meta(Meta::NameValue(value)) if value.path.is_ident("deserialize") => {
                     if let Lit::Str(s) = &value.lit {
-                        let rule = RenameRule::from_rename_all_str(&s.value()).map_err(|_| {
-                            DarlingError::custom(format!(
-                                "unknown rename_all value [{}]",
-                                s.value()
-                            ))
-                        })?;
+                        let rule = RenameRule::from_rename_all_str(&s.value())
+                            .map_err(|err| DarlingError::custom(err.msg_for_rename_all()))?;
                         deserialize = Some(rule);
                     }
                 }
