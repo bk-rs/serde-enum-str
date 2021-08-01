@@ -72,7 +72,7 @@ impl Parse for Input {
                 } else {
                     return Err(SynError::new(
                         enum_variant.ident.span(),
-                        "must be a tuple variant",
+                        "must be a tuple or unit variant",
                     ));
                 }
             } else {
