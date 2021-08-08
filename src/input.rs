@@ -61,10 +61,17 @@ impl Parse for Input {
         }
         for enum_variant in enum_variants_iter.rev() {
             if enum_variant.is_other {
-                return Err(SynError::new(
-                    call_site,
-                    "only one variant can be #[serde(other)]",
-                ));
+                if default_variant.is_some() {
+                    return Err(SynError::new(
+                        call_site,
+                        "only one variant can be #[serde(other)]",
+                    ));
+                } else {
+                    return Err(SynError::new(
+                        call_site,
+                        "the #[serde(other)] variant should be at the end",
+                    ));
+                }
             } else {
                 variants.push(parse_variant(enum_variant)?)
             }
