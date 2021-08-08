@@ -48,65 +48,26 @@ impl Parse for Input {
         let rename_all = enum_derive_input.rename_all;
 
         let mut variants = vec![];
-        let mut default_variants = vec![];
-        for enum_variant in enum_variants {
+        let mut default_variant = None;
+
+        let mut enum_variants_iter = enum_variants.iter().rev();
+        let enum_variant = enum_variants_iter
+            .next()
+            .ok_or_else(|| SynError::new(call_site, "there must be at least one variant"))?;
+        if enum_variant.is_other {
+            default_variant = Some(parse_default_variant(enum_variant)?);
+        } else {
+            variants.push(parse_variant(enum_variant)?)
+        }
+        for enum_variant in enum_variants_iter {
             if enum_variant.is_other {
-                if enum_variant.fields.is_tuple() {
-                    let mut types_iter = enum_variant.fields.to_owned().into_iter();
-                    let r#type = types_iter.next().ok_or_else(|| {
-                        SynError::new(enum_variant.ident.span(), "must be at least one type")
-                    })?;
-                    if types_iter.next().is_some() {
-                        return Err(SynError::new(enum_variant.ident.span(), "must be one type"));
-                    }
-
-                    default_variants.push(DefaultVariant {
-                        ident: enum_variant.ident.to_owned(),
-                        r#type: Some(r#type),
-                    });
-                } else if enum_variant.fields.is_unit() {
-                    default_variants.push(DefaultVariant {
-                        ident: enum_variant.ident.to_owned(),
-                        r#type: None,
-                    });
-                } else {
-                    return Err(SynError::new(
-                        enum_variant.ident.span(),
-                        "must be a tuple or unit variant",
-                    ));
-                }
+                return Err(SynError::new(
+                    call_site,
+                    "only one variant can be #[serde(other)]",
+                ));
             } else {
-                if !enum_variant.fields.is_unit() {
-                    return Err(SynError::new(
-                        enum_variant.ident.span(),
-                        "must be a unit variant",
-                    ));
-                }
-
-                variants.push(Variant {
-                    ident: enum_variant.ident.to_owned(),
-                    rename: enum_variant.rename.to_owned(),
-                    alias_vec: if enum_variant.alias_vec.is_empty() {
-                        None
-                    } else {
-                        Some(enum_variant.alias_vec.to_owned())
-                    },
-                    skip_serializing: enum_variant.skip_serializing.or(enum_variant.skip),
-                    skip_deserializing: enum_variant.skip_deserializing.or(enum_variant.skip),
-                });
+                variants.push(parse_variant(enum_variant)?)
             }
-        }
-        if variants.is_empty() && default_variants.is_empty() {
-            return Err(SynError::new(
-                call_site,
-                "there must be at least one variant",
-            ));
-        }
-        if default_variants.len() > 1 {
-            return Err(SynError::new(
-                call_site,
-                "only one variant can be #[serde(other)]",
-            ));
         }
 
         let generics = enum_derive_input.generics;
@@ -114,13 +75,60 @@ impl Parse for Input {
             return Err(SynError::new(call_site, "generic enum is not supported"));
         }
 
-        let default_variant = default_variants.first().cloned();
         Ok(Self {
             ident,
             rename_all,
             variants,
             default_variant,
         })
+    }
+}
+
+fn parse_variant(enum_variant: &EnumVariant) -> Result<Variant, SynError> {
+    if !enum_variant.fields.is_unit() {
+        return Err(SynError::new(
+            enum_variant.ident.span(),
+            "must be a unit variant",
+        ));
+    }
+
+    Ok(Variant {
+        ident: enum_variant.ident.to_owned(),
+        rename: enum_variant.rename.to_owned(),
+        alias_vec: if enum_variant.alias_vec.is_empty() {
+            None
+        } else {
+            Some(enum_variant.alias_vec.to_owned())
+        },
+        skip_serializing: enum_variant.skip_serializing.or(enum_variant.skip),
+        skip_deserializing: enum_variant.skip_deserializing.or(enum_variant.skip),
+    })
+}
+
+fn parse_default_variant(enum_variant: &EnumVariant) -> Result<DefaultVariant, SynError> {
+    if enum_variant.fields.is_tuple() {
+        let mut types_iter = enum_variant.fields.to_owned().into_iter();
+        let r#type = types_iter
+            .next()
+            .ok_or_else(|| SynError::new(enum_variant.ident.span(), "must be at least one type"))?;
+        if types_iter.next().is_some() {
+            return Err(SynError::new(enum_variant.ident.span(), "must be one type"));
+        }
+
+        Ok(DefaultVariant {
+            ident: enum_variant.ident.to_owned(),
+            r#type: Some(r#type),
+        })
+    } else if enum_variant.fields.is_unit() {
+        Ok(DefaultVariant {
+            ident: enum_variant.ident.to_owned(),
+            r#type: None,
+        })
+    } else {
+        Err(SynError::new(
+            enum_variant.ident.span(),
+            "must be a tuple or unit variant",
+        ))
     }
 }
 
