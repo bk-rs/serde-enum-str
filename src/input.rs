@@ -59,7 +59,7 @@ impl Parse for Input {
         } else {
             variants.push(parse_variant(enum_variant)?)
         }
-        for enum_variant in enum_variants_iter {
+        for enum_variant in enum_variants_iter.rev() {
             if enum_variant.is_other {
                 return Err(SynError::new(
                     call_site,
