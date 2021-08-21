@@ -41,7 +41,7 @@ impl<'a> ToTokens for SerdeEnum<'a> {
         let serde_rename_all = if let Some(rename_all) = &input.rename_all {
             match self.category {
                 SerdeEnumCategory::Ser => {
-                    if let Some(serialize) = &rename_all.serialize {
+                    if let Some(serialize) = &rename_all.ser_rule() {
                         let s = serialize.to_rename_all_str();
                         quote!(#[serde(rename_all(serialize = #s))])
                     } else {
@@ -49,7 +49,7 @@ impl<'a> ToTokens for SerdeEnum<'a> {
                     }
                 }
                 SerdeEnumCategory::De => {
-                    if let Some(deserialize) = &rename_all.deserialize {
+                    if let Some(deserialize) = &rename_all.de_rule() {
                         let s = deserialize.to_rename_all_str();
                         quote!(#[serde(rename_all(deserialize = #s))])
                     } else {
@@ -69,14 +69,14 @@ impl<'a> ToTokens for SerdeEnum<'a> {
                 let serde_rename = if let Some(rename) = &variant.rename {
                     match self.category {
                         SerdeEnumCategory::Ser => {
-                            if let Some(serialize) = &rename.serialize {
+                            if let Some(serialize) = &rename.ser_name() {
                                 quote!(#[serde(rename(serialize = #serialize))])
                             } else {
                                 quote!()
                             }
                         }
                         SerdeEnumCategory::De => {
-                            if let Some(deserialize) = &rename.deserialize {
+                            if let Some(deserialize) = &rename.de_name() {
                                 quote!(#[serde(rename(deserialize = #deserialize))])
                             } else {
                                 quote!()
@@ -92,7 +92,10 @@ impl<'a> ToTokens for SerdeEnum<'a> {
                         if let Some(alias_vec) = &variant.alias_vec {
                             let tokens = alias_vec
                                 .iter()
-                                .map(|alias| quote!(#[serde(alias = #alias)]))
+                                .map(|alias| {
+                                    let alias = &alias.0;
+                                    quote!(#[serde(alias = #alias)])
+                                })
                                 .collect::<Vec<_>>();
                             quote! {
                                 #(#tokens)*

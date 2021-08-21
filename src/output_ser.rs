@@ -43,7 +43,7 @@ impl ToTokens for InputWrapper {
             } else {
                 let mut name = ident.to_string();
                 if let Some(rename_all) = &input.rename_all {
-                    if let Some(rename_rule) = &rename_all.serialize {
+                    if let Some(rename_rule) = &rename_all.ser_rule() {
                         name = rename_rule.apply_to_variant(&name);
                     }
                 }
@@ -80,7 +80,7 @@ impl ToTokens for InputWrapper {
                 if variant.skip_serializing == Some(true) {
                     let mut name = ident.to_string();
                     if let Some(rename_all) = &input.rename_all {
-                        if let Some(rename_rule) = &rename_all.serialize {
+                        if let Some(rename_rule) = &rename_all.ser_rule() {
                             name = rename_rule.apply_to_variant(&name);
                         }
                     }
@@ -103,7 +103,7 @@ impl ToTokens for InputWrapper {
             } else {
                 let mut name = ident.to_string();
                 if let Some(rename_all) = &input.rename_all {
-                    if let Some(rename_rule) = &rename_all.serialize {
+                    if let Some(rename_rule) = &rename_all.ser_rule() {
                         name = rename_rule.apply_to_variant(&name);
                     }
                 }

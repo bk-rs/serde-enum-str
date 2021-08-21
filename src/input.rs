@@ -4,24 +4,23 @@ use darling::{
     FromDeriveInput, FromVariant,
 };
 use proc_macro2::Span;
+use serde_attributes::{Alias, Rename, RenameAll};
 use syn::{
     parse::{Parse, ParseStream},
     Attribute, DeriveInput, Error as SynError, Expr, Generics, Ident, Type, Visibility,
 };
 
-use crate::attributes::{RenameAllAttribute, RenameAttribute};
-
 pub struct Input {
     pub ident: Ident,
-    pub rename_all: Option<RenameAllAttribute>,
+    pub rename_all: Option<RenameAll>,
     pub variants: Vec<Variant>,
     pub default_variant: Option<DefaultVariant>,
 }
 
 pub struct Variant {
     pub ident: Ident,
-    pub rename: Option<RenameAttribute>,
-    pub alias_vec: Option<Vec<String>>,
+    pub rename: Option<Rename>,
+    pub alias_vec: Option<Vec<Alias>>,
     pub skip_serializing: Option<bool>,
     pub skip_deserializing: Option<bool>,
 }
@@ -149,7 +148,7 @@ struct EnumDeriveInput {
     data: Data<EnumVariant, Ignored>,
 
     #[darling(default)]
-    rename_all: Option<RenameAllAttribute>,
+    rename_all: Option<RenameAll>,
 }
 
 #[derive(FromVariant, Debug)]
@@ -161,9 +160,9 @@ struct EnumVariant {
     discriminant: Option<Expr>,
 
     #[darling(default)]
-    rename: Option<RenameAttribute>,
+    rename: Option<Rename>,
     #[darling(default, multiple, rename = "alias")]
-    alias_vec: Vec<String>,
+    alias_vec: Vec<Alias>,
     #[darling(default)]
     skip: Option<bool>,
     #[darling(default)]
