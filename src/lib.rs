@@ -3,7 +3,7 @@
 //! ```Cargo.toml
 //! [dependencies]
 //! serde = { version = "1.0", features = ["derive"] }
-//! serde-enum-str = "0.1"
+//! serde-enum-str = "0.2"
 //! ```
 //!
 //! ```
